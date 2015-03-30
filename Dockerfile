@@ -3,7 +3,8 @@ FROM ubuntu:14.04
 USER root
 
 RUN apt-get update
-RUN apt-get -y install python supervisor wget python-pip python-dev build-essential curl tar sudo openssh-server openssh-client rsync
+RUN apt-get -y install wget curl tar sudo openssh-server openssh-client rsync
+RUN apt-get -y install python supervisor python-pip python-dev build-essential
 
 RUN pip install pip --upgrade
 RUN pip2.7 install ipython[notebook]
@@ -33,7 +34,6 @@ RUN cd /usr/local && ln -s ./hadoop-2.6.0 hadoop
 ENV HADOOP_PREFIX /usr/local/hadoop
 RUN sed -i '/^export JAVA_HOME/ s:.*:export JAVA_HOME=/usr/java/default\nexport HADOOP_PREFIX=/usr/local/hadoop\nexport HADOOP_HOME=/usr/local/hadoop\n:' $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh
 RUN sed -i '/^export HADOOP_CONF_DIR/ s:.*:export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop/:' $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh
-#RUN . $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh
 
 RUN mkdir $HADOOP_PREFIX/input
 RUN cp $HADOOP_PREFIX/etc/hadoop/*.xml $HADOOP_PREFIX/input
@@ -56,14 +56,6 @@ ADD ssh_config /root/.ssh/config
 RUN chmod 600 /root/.ssh/config
 RUN chown root:root /root/.ssh/config
 
-# # installing supervisord
-# RUN yum install -y python-setuptools
-# RUN easy_install pip
-# RUN curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -o - | python
-# RUN pip install supervisor
-#
-# ADD supervisord.conf /etc/supervisord.conf
-
 ADD bootstrap.sh /etc/bootstrap.sh
 RUN chown root:root /etc/bootstrap.sh
 RUN chmod 700 /etc/bootstrap.sh
@@ -84,9 +76,8 @@ RUN echo "Port 2122" >> /etc/ssh/sshd_config
 RUN service ssh start && $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && $HADOOP_PREFIX/sbin/start-dfs.sh && $HADOOP_PREFIX/bin/hdfs dfs -mkdir -p /user/root
 RUN service ssh start && $HADOOP_PREFIX/etc/hadoop/hadoop-env.sh && $HADOOP_PREFIX/sbin/start-dfs.sh && $HADOOP_PREFIX/bin/hdfs dfs -put $HADOOP_PREFIX/etc/hadoop/ input
 
-#CMD ["/etc/bootstrap.sh", "-d"]
-
-EXPOSE 8888 50020 50090 50070 50010 50075 8031 8032 8033 8040 8042 49707 22 8088 8030
+EXPOSE 50020 50090 50070 50010 50075 8031 8032 8033 8040 8042 49707 22 8088 8030
+EXPOSE 8888
 
 # Spark
 RUN curl -s http://www.eu.apache.org/dist/spark/spark-1.3.0/spark-1.3.0-bin-hadoop2.4.tgz | tar -xz -C /usr/local/
@@ -108,7 +99,6 @@ ENV SPARK_JAR hdfs:///spark/spark-assembly-1.3.0-hadoop2.4.0.jar
 ENV SPARK_HOME /usr/local/spark
 ENV PATH $PATH:$SPARK_HOME/bin:$HADOOP_PREFIX/bin
 
-#CMD ["/etc/bootstrap.sh", "-d"]
 RUN mkdir /notebooks
 VOLUME /notebooks
 WORKDIR /notebooks
