@@ -4,7 +4,7 @@ To run a container with a shared folder (e.g. ~/Desktop/localFolder), listening 
 The *localFolder* is located on the desktop and you can use it to share file with the virtual machines, ipython notebook included.
 
 ```
-docker run -d -p 8888:8888 -v ~/Desktop/localFolder/:/notebooks --name pyspark stravanni/ipython-spark
+docker run -d -p 8888:8888 -v ~/Desktop/localFolder/:/notebooks --name pyspark stravanni/cineca-spark
 ```
 
 - `-d` deamon mode
@@ -49,3 +49,17 @@ IPYTHON_OPTS="notebook --no-browser --ip=0.0.0.0 --port 8888" /usr/local/spark/b
 ```
 The IPython notebook will already have the *sparkContext* variable `sc`.
 Write `sc.version` to see what verison is loaded.
+
+
+### Hadoop environment
+
+To read a file directly from the disk (no HDFS), 
+use explicitly:
+```
+sc.textFile("file:///absolute_path to the file/")
+```
+
+SparkContext.textFile internally calls org.apache.hadoop.mapred.FileInputFormat.getSplits, which in turn uses org.apache.hadoop.fs.getDefaultUri if schema is absent.
+This method reads "fs.defaultFS" parameter of Hadoop conf.
+
+If you set HADOOP_CONF_DIR environment variable, the parameter is usually set as "hdfs://..."; otherwise "file://".
